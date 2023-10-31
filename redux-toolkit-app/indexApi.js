@@ -6,6 +6,8 @@
 
 const { createStore, applyMiddleware } = require("redux");
 const thunk = require("redux-thunk").default;
+const axios = require("axios");
+
 
 //Constant
 const GET_TODO_REQUEST = "GET_TODO_REQUEST";
@@ -52,7 +54,7 @@ const todoReducer = (state=initialTodosState,action) =>
             return{
                 ...state,
                 isloading:false,
-                payload:action.payload
+                todos:action.payload
             }
         case GET_TODO_FAILED:
             return{
@@ -70,17 +72,24 @@ const fetchData=() => {
         dispatch(getTodoRequest());
         axios.get(API_URL)
         .then(res=> {
-            console.log(res.data)
+            
+            const todolist = res.data;
+            //console.log(todolist);
+            const titles = todolist.map((todo) => todo.title);
+            //console.log(titles)
+            dispatch(getTodoSuccess(titles));
         })
         .catch(error => {
-            console.log(error.message);
+            //console.log(error.message);
+            const msg = error.message;
+            dispatch(getTodoFailed(msg));
         })
     }
 }
 // store
-const store = createStore(todoReducer, applyMiddleware);
+const store = createStore(todoReducer, applyMiddleware(thunk));
 store.subscribe(()=>{
     console.log("store",store.getState());
 })
 
-// store.dispatch()
+store.dispatch(fetchData())
